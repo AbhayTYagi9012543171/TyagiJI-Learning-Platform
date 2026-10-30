@@ -1,0 +1,19 @@
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports: ["27017:27017"]
+    volumes: [tyagiji_mongo:/data/db]
+  api:
+    build: .
+    depends_on: [mongodb]
+    ports: ["5000:5000"]
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      CLIENT_URL: http://localhost:5173
+      MONGODB_URI: mongodb://mongodb:27017/tyagiji_learning
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in root .env}
+      COOKIE_SECURE: "false"
+volumes:
+  tyagiji_mongo: {}
