@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TyagiJI Learning Platform
 
 Full-stack web-development learning platform starter: React/Vite, Express, MongoDB/Mongoose, student/admin roles, courses, lessons, projects, quizzes, bookmarks, progress, resources, and sandboxed coding playground.
@@ -97,3 +98,7 @@ This release adds a route-level `client/src/pages/` architecture, a dedicated Ab
 - Verification status and limitations: [`docs/UPGRADE-VERIFICATION.md`](docs/UPGRADE-VERIFICATION.md)
 
 The production Express server serves the built React app from the same origin. The ZIP is source code and deployment configuration; it does not itself publish to your Render account. Connect the repository or follow the Render guide, and preserve your existing MongoDB Atlas URI if you need to retain live accounts and course data.
+=======
+# TyagiJI-Learning-Platform
+TyagiJI Learning Platform - Full Stack Web Application
+>>>>>>> 7e8d6a8187b3e2af5575438a3888d4c049b2edb3
