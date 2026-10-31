@@ -105,7 +105,7 @@ function createSession(user, res) {
   res.cookie('cp_session', token, {
     httpOnly: true,
     secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: 'lax',
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
   });
@@ -115,7 +115,7 @@ function clearSession(res) {
   res.clearCookie('cp_session', {
     httpOnly: true,
     secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/',
   });
 }
