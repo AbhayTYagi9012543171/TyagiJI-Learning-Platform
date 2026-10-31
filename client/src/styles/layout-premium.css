@@ -1567,3 +1567,46 @@ svg {
     animation: none !important;
   }
 }
+
+
+/* Premium course detail and assessment enhancements */
+.course-skills-panel,
+.course-audience-panel,
+.quiz-instructions {
+  margin-block: 1.25rem;
+}
+.course-skills-panel h2,
+.course-audience-panel h2,
+.quiz-instructions h2 {
+  margin: .35rem 0 .8rem;
+}
+.course-skills-panel .detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+.module-objectives {
+  margin: .65rem 0 0;
+  padding-left: 1.15rem;
+  color: var(--muted, #9aa4b2);
+  font-size: .9rem;
+}
+.module-objectives li + li { margin-top: .25rem; }
+.lesson-preview {
+  display: block;
+  margin-top: .3rem;
+  max-width: 65ch;
+  white-space: normal;
+  line-height: 1.5;
+}
+.quiz-instructions > p {
+  color: var(--muted, #9aa4b2);
+  line-height: 1.7;
+}
+.quiz-result .course-meta-grid {
+  margin: 1.25rem 0;
+}
+@media (max-width: 640px) {
+  .course-meta-grid { grid-template-columns: 1fr 1fr; }
+  .lesson-preview { max-width: 100%; }
+}

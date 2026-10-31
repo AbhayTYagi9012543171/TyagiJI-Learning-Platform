@@ -758,6 +758,45 @@ export function Course() {
         </section>
       )}
 
+      {getArray(course.skills).length > 0 && (
+        <section className="panel course-skills-panel">
+          <span className="eyebrow">SKILLS YOU WILL BUILD</span>
+          <h2>Professional skills covered</h2>
+          <div className="detail-tags">
+            {course.skills.map((skill, index) => (
+              <span className="pill" key={`${skill}-${index}`}>{skill}</span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {getArray(course.learningOutcomes).length > 0 && (
+        <section className="panel outcomes">
+          <span className="eyebrow">CAREER-READY OUTCOMES</span>
+          <h2>By the end of this course, you can</h2>
+          <ul>
+            {course.learningOutcomes.map((outcome, index) => (
+              <li key={`${outcome}-${index}`}>
+                <CheckCircle2 size={17} />
+                {outcome}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {getArray(course.targetAudience).length > 0 && (
+        <section className="panel course-audience-panel">
+          <span className="eyebrow">WHO THIS COURSE IS FOR</span>
+          <h2>Is this course right for you?</h2>
+          <ul>
+            {course.targetAudience.map((audience, index) => (
+              <li key={`${audience}-${index}`}>{audience}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="section-head">
         <div>
           <span className="eyebrow">YOUR LEARNING ROADMAP</span>
@@ -787,6 +826,14 @@ export function Course() {
                     <h3>{module.title}</h3>
                     <p>{module.description}</p>
 
+                    {getArray(module.objectives).length > 0 && (
+                      <ul className="module-objectives">
+                        {module.objectives.map((objective, objectiveIndex) => (
+                          <li key={`${objective}-${objectiveIndex}`}>{objective}</li>
+                        ))}
+                      </ul>
+                    )}
+
                     {module.estimatedMinutes > 0 && (
                       <small>
                         <Clock3 size={13} />
@@ -814,6 +861,9 @@ export function Course() {
                           {lesson.durationMinutes || 10} min ·{' '}
                           {lesson.difficulty || 'Beginner'}
                         </small>
+                        {lesson.summary && (
+                          <small className="lesson-preview">{lesson.summary}</small>
+                        )}
                       </span>
 
                       <ArrowUpRight size={17} />
@@ -2393,6 +2443,22 @@ export function Quiz() {
         <Loading text="Preparing your assessment..." />
       ) : quiz ? (
         <>
+          <section className="panel quiz-instructions">
+            <div className="section-head">
+              <div>
+                <span className="eyebrow">ASSESSMENT BRIEF</span>
+                <h2>Show what you know</h2>
+              </div>
+              <span className="pill">Pass mark: {quiz.passingScore ?? 70}%</span>
+            </div>
+            <p>Answer every question, review your choices, then submit once you are ready. You will receive your score and learning explanations after submission.</p>
+            <div className="detail-tags">
+              <span className="pill">{questions.length} questions</span>
+              <span className="pill">Instant feedback</span>
+              <span className="pill">Retry available</span>
+            </div>
+          </section>
+
           <div className="quiz-progress">
             <span>
               {Object.keys(answers).length} of {questions.length} answered
@@ -2461,6 +2527,21 @@ export function Quiz() {
               </div>
 
               <h2>Your score: {result.percentage}%</h2>
+
+              <div className="course-meta-grid">
+                <div>
+                  <strong>{result.score ?? result.correct ?? '—'}</strong>
+                  <small>Correct answers</small>
+                </div>
+                <div>
+                  <strong>{result.total ?? questions.length}</strong>
+                  <small>Total questions</small>
+                </div>
+                <div>
+                  <strong>{quiz.passingScore ?? 70}%</strong>
+                  <small>Pass mark</small>
+                </div>
+              </div>
 
               <p>
                 {result.passed
