@@ -1,4 +1,6 @@
-const DEFAULT_API_URL = 'http://localhost:5000/api/v1';
+const DEFAULT_API_URL = import.meta.env.PROD
+  ? '/api/v1'
+  : 'http://localhost:5000/api/v1';
 
 const API_BASE = String(
   import.meta.env.VITE_API_URL || DEFAULT_API_URL

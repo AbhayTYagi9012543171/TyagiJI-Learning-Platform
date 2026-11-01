@@ -25,9 +25,9 @@ async function getAuthenticatedUser(req) {
   if (!payload?.sub) return null;
 
   const user = await User.findById(payload.sub)
-    .select('name email role status preferences');
+    .select('name email role status preferences +authVersion');
 
-  if (!user || user.status !== 'active') {
+  if (!user || user.status !== 'active' || Number(payload.ver || 0) !== Number(user.authVersion || 0)) {
     return null;
   }
 

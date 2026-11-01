@@ -512,7 +512,7 @@ router.post(
 
       email: parsed.data.email,
 
-    }).select('+passwordHash');
+    }).select('+passwordHash +authVersion');
 
 
 
@@ -568,7 +568,18 @@ router.post(
 
 // LOGOUT
 
-router.post('/auth/logout', (req, res) => {
+router.post('/auth/logout', asyncRoute(async (req, res) => {
+
+  const bearer = (req.headers.authorization || '').match(/^Bearer\s+(.+)$/i);
+  const token = req.cookies?.cp_session || bearer?.[1];
+  if (token) {
+    try {
+      const payload = jwt.verify(token, process.env.SESSION_SECRET);
+      if (payload?.sub && isValidId(payload.sub)) {
+        await User.updateOne({ _id: payload.sub }, { $inc: { authVersion: 1 } });
+      }
+    } catch { /* Expired or invalid cookies are still cleared below. */ }
+  }
 
   clearSession(res);
 
@@ -582,7 +593,7 @@ router.post('/auth/logout', (req, res) => {
 
   });
 
-});
+}));
 
 
 
@@ -780,7 +791,7 @@ router.post(
 
       },
 
-    }).select('+resetTokenHash');
+    }).select('+resetTokenHash +authVersion');
 
 
 
@@ -811,8 +822,7 @@ router.post(
     user.resetTokenHash = undefined;
 
     user.resetTokenExpires = undefined;
-
-
+    user.authVersion = Number(user.authVersion || 0) + 1;
 
     await user.save();
 
@@ -4486,6 +4496,9 @@ router.delete('/career/roadmaps/:id', requireAuth, asyncRoute(async (req, res) =
 }));
 
 
+
+// Additive V11 API modules are mounted before the legacy fallback.
+router.use('/v11', require('./v11.routes'));
 
 /* -------------------------------------------------------
 
