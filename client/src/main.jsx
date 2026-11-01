@@ -6,6 +6,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import App from './app/App.jsx';
 
+
+import './styles/pages/about-premium.css';
 import './styles/global.css';
 import './styles/layout-premium.css';
 import './styles/components/ui.css';
