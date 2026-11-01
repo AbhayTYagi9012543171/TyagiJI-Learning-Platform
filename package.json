@@ -1,0 +1,25 @@
+{
+  "name": "tyagiji-learning-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace client run build",
+    "test": "npm --workspace server test && npm --workspace client test",
+    "seed": "npm --workspace server run seed",
+    "admin:create": "npm --workspace server run admin:create",
+    "start:prod": "npm --workspace server start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20 <23"
+  }
+}
