@@ -6,10 +6,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import App from './app/App.jsx';
 
+// Global styles
 import './styles/global.css';
 import './styles/layout-premium.css';
 import './styles/components/ui.css';
+
+// Page styles
 import './styles/pages/enterprise-pages.css';
+import './styles/pages/projects-premium.css';
 
 const rootElement = document.getElementById('root');
 
