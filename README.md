@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> backup-local-files
 # TyagiJI Learning Platform
 
 Full-stack web-development learning platform starter: React/Vite, Express, MongoDB/Mongoose, student/admin roles, courses, lessons, projects, quizzes, bookmarks, progress, resources, and sandboxed coding playground.
@@ -26,6 +29,12 @@ This package includes the Premium V3 UI pass documented in [`docs/PREMIUM-V3-REL
 ## Environment
 `NODE_ENV`, `PORT`, `CLIENT_URL`, `MONGODB_URI`, `SESSION_SECRET`, `COOKIE_SECURE`, `TRUST_PROXY_HOPS`, `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`. Never commit `.env`.
 
+<<<<<<< HEAD
+=======
+## Career workspace
+The authenticated Career workspace stores one profile per user and supports creating, updating milestone completion, listing, and deleting personal roadmaps. Career data is private to the signed-in account.
+
+>>>>>>> backup-local-files
 ## Current scope and limitations
 The seed creates 3 web-foundation tracks plus 9 premium tracks (React, Node.js/Express, MongoDB, Python, TypeScript, SQL, Git, and Data Structures & Algorithms). Most premium tracks include 5 curriculum modules and 15 detailed lesson pages; the MERN Stack flagship includes 10 modules and 30 lesson pages (concepts, examples, practice labs, common mistakes/acceptance criteria), a practical assessment, and a capstone brief. The seeded quizzes are learning checks, not professional certification exams; review and expand question banks before high-stakes use. Password reset email delivery is not integrated; development reset links are logged only when explicitly enabled. The glossary and cheatsheet endpoints provide authored reference content. The admin UI supports paginated/searchable create, edit, publish/unpublish, enable/disable, and delete workflows for supported record types. Advanced model fields can be edited through a validated JSON editor. Course deletion removes related modules, lessons, quizzes, bookmarks, progress, and attempts. Student account creation is supported through registration and the admin panel; administrator creation and promotion remain a secure CLI operation. Automated code grading, full end-to-end browser coverage, and legal review remain future work. No fake user counts or testimonials are shown.
 
@@ -44,7 +53,11 @@ A branded SVG favicon is included at `client/public/favicon.svg`. If you change 
 - Start MongoDB and confirm the exact `MONGODB_URI` in the environment file being used.
 - From the repository root run `npm run seed`; the seed command is idempotent and publishes the `html`, `css`, and `javascript` foundation courses plus nine premium technology tracks.
 - Check `http://localhost:5000/api/v1/health` and `http://localhost:5000/api/v1/courses`. The HTML course detail is `http://localhost:5000/api/v1/courses/html`.
+<<<<<<< HEAD
 - An unauthenticated `GET /api/v1/auth/me` returns 401 by design. Register or log in to receive the HTTP-only `cp_session` cookie. If login succeeds but the next request is unauthorized, verify `CLIENT_URL`, `credentials: include`, and that the frontend and API use consistent `localhost` hostnames.
+=======
+- An unauthenticated `GET /api/v1/auth/me` returns HTTP 200 with `{ success: true, authenticated: false, user: null }` so the client can render the signed-out state. Register or log in to receive the HTTP-only `cp_session` cookie. If login succeeds but the next request is unauthorized, verify `CLIENT_URL`, `credentials: include`, and that the frontend and API use consistent `localhost` hostnames.
+>>>>>>> backup-local-files
 - Run `npm test` and `npm run build` after installing dependencies. Do not treat syntax checks alone as a successful production build.
 
 
@@ -97,8 +110,12 @@ This release adds a route-level `client/src/pages/` architecture, a dedicated Ab
 - Render single-service deployment: [`docs/RENDER-DEPLOYMENT.md`](docs/RENDER-DEPLOYMENT.md) and `render.yaml`
 - Verification status and limitations: [`docs/UPGRADE-VERIFICATION.md`](docs/UPGRADE-VERIFICATION.md)
 
+<<<<<<< HEAD
 The production Express server serves the built React app from the same origin. The ZIP is source code and deployment configuration; it does not itself publish to your Render account. Connect the repository or follow the Render guide, and preserve your existing MongoDB Atlas URI if you need to retain live accounts and course data.
 =======
 # TyagiJI-Learning-Platform
 TyagiJI Learning Platform - Full Stack Web Application
 >>>>>>> 7e8d6a8187b3e2af5575438a3888d4c049b2edb3
+=======
+The production Express server serves the built React app from the same origin. The ZIP is source code and deployment configuration; it does not itself publish to your Render account. Connect the repository or follow the Render guide, and preserve your existing MongoDB Atlas URI if you need to retain live accounts and course data.7e8d6a8187b3e2af5575438a3888d4c049b2edb3
+>>>>>>> backup-local-files
