@@ -1,4 +1,26 @@
-import { Cheatsheets } from '../Pages.jsx';
+import React, { useMemo, useState } from 'react';
+import { Check, Clipboard, Code2, Search, Terminal, Layers, Copy, Braces } from 'lucide-react';
+import './resources-premium.css';
 
-export default Cheatsheets;
-export { Cheatsheets };
+const SHEETS = [
+ {id:'git-1',group:'Git & GitHub',title:'Everyday Git workflow',description:'Create a branch, commit changes and publish your work.',language:'bash',code:'git switch -c feature/my-feature\ngit status\ngit add .\ngit commit -m \"feat: describe the change\"\ngit push -u origin feature/my-feature'},
+ {id:'git-2',group:'Git & GitHub',title:'Inspect and undo changes',description:'Review history and safely undo common mistakes.',language:'bash',code:'git log --oneline --graph --decorate\ngit diff\ngit restore path/to/file\ngit revert <commit>\ngit stash push -m \"work in progress\"'},
+ {id:'react-1',group:'React',title:'State and effect essentials',description:'A compact reminder for common React hooks.',language:'jsx',code:'const [value, setValue] = useState(initialValue);\n\nuseEffect(() => {\n  const controller = new AbortController();\n  loadData({ signal: controller.signal });\n  return () => controller.abort();\n}, []);'},
+ {id:'react-2',group:'React',title:'Reusable component pattern',description:'Keep component inputs explicit and predictable.',language:'jsx',code:'function StatusBadge({ status = \"idle\" }) {\n  const labels = {\n    idle: \"Not started\",\n    loading: \"In progress\",\n    success: \"Complete\",\n  };\n  return <span>{labels[status] ?? \"Unknown\"}</span>;\n}'},
+ {id:'node-1',group:'Node & Express',title:'Express async route',description:'Forward asynchronous errors to centralized middleware.',language:'javascript',code:'router.get(\"/items\", async (req, res, next) => {\n  try {\n    const items = await Item.find().lean();\n    res.status(200).json({ success: true, data: items });\n  } catch (error) {\n    next(error);\n  }\n});'},
+ {id:'node-2',group:'Node & Express',title:'Environment configuration',description:'Validate required environment values at startup.',language:'javascript',code:'const required = [\"MONGODB_URI\", \"SESSION_SECRET\"];\n\nfor (const key of required) {\n  if (!process.env[key]) {\n    throw new Error(`Missing environment variable: ${key}`);\n  }\n}'},
+ {id:'mongo-1',group:'MongoDB',title:'Mongoose query patterns',description:'Select only the fields your UI needs.',language:'javascript',code:'const users = await User.find({ active: true })\n  .select(\"name email role\")\n  .sort({ createdAt: -1 })\n  .limit(20)\n  .lean();'},
+ {id:'css-1',group:'CSS',title:'Responsive layout starter',description:'Use a flexible grid that adapts to available space.',language:'css',code:'.content-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));\n  gap: 1.25rem;\n}\n\nimg { max-width: 100%; height: auto; }'}
+];
+const GROUPS=['All',...new Set(SHEETS.map(s=>s.group))];
+export default function CheatsheetsPage(){
+ const [group,setGroup]=useState('All'); const [query,setQuery]=useState(''); const [copied,setCopied]=useState('');
+ const filtered=useMemo(()=>SHEETS.filter(s=>(group==='All'||s.group===group)&&(`${s.title} ${s.description} ${s.code}`.toLowerCase().includes(query.toLowerCase()))),[group,query]);
+ const copy=async item=>{try{await navigator.clipboard.writeText(item.code);setCopied(item.id);window.setTimeout(()=>setCopied(v=>v===item.id?'':v),1800);}catch{setCopied('');}};
+ return <main className="rp-page"><div className="rp-shell">
+  <section className="rp-subhero"><span className="rp-eyebrow"><Code2 size={15}/> QUICK REFERENCE</span><h1>Less searching.<br/><span>More building.</span></h1><p>Practical snippets and command references for the tools you use every day.</p><div className="rp-hero-meta"><span><Layers size={15}/>{SHEETS.length} cheat sheets</span><span><Clipboard size={15}/>One-click copy</span></div></section>
+  <section className="rp-toolbar"><label className="rp-search"><Search size={19}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Find a command, hook or pattern..." aria-label="Search cheat sheets"/></label><span className="rp-count">{filtered.length} results</span></section>
+  <nav className="rp-chips rp-sheet-tabs" aria-label="Cheatsheet categories">{GROUPS.map(g=><button key={g} className={`rp-chip ${group===g?'is-active':''}`} onClick={()=>setGroup(g)}>{g}</button>)}</nav>
+  {filtered.length?<section className="rp-sheet-grid">{filtered.map((item,i)=><article className="rp-sheet-card" key={item.id} style={{'--rp-index':i}}><div className="rp-sheet-heading"><span className="rp-category">{item.group}</span><span className="rp-language"><Braces size={13}/>{item.language}</span></div><h2>{item.title}</h2><p>{item.description}</p><div className="rp-code-window"><div className="rp-code-top"><span><i/> <i/> <i/> <b>{item.language}</b></span><button onClick={()=>copy(item)} aria-label={`Copy ${item.title}`}>{copied===item.id?<><Check size={15}/> Copied</>:<><Copy size={15}/> Copy</>}</button></div><pre><code>{item.code}</code></pre></div></article>)}</section>:<div className="rp-empty"><Search size={24}/><h3>No snippets found</h3><p>Try a different search or select another category.</p><button className="rp-button rp-primary" onClick={()=>{setQuery('');setGroup('All')}}>Reset search</button></div>}
+ </div></main>;
+}

@@ -856,6 +856,9 @@ router.post(
 
 router.use('/courses', require('./course.routes'));
 
+// Learner achievement catalogue and progress API.
+router.use('/achievements', require('./achievement.routes'));
+
 
 
 router.get(
