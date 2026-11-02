@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -19,14 +18,19 @@ import {
   CircleDot,
   CheckCircle2,
   Command,
-  Filter,
 } from 'lucide-react';
 
 import { api } from '../../services/api.js';
 
+import '../../styles/pages/projects-premium.css';
 const PAGE_SIZE = 9;
 
-const DIFFICULTIES = ['All levels', 'Beginner', 'Intermediate', 'Advanced'];
+const DIFFICULTIES = [
+  'All levels',
+  'Beginner',
+  'Intermediate',
+  'Advanced',
+];
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured first' },
@@ -46,14 +50,20 @@ function text(value, fallback = '') {
 }
 
 function getTechnologies(project) {
-  const value = project?.technology || project?.technologies || project?.techStack;
+  const value =
+    project?.technology ||
+    project?.technologies ||
+    project?.techStack;
 
   if (Array.isArray(value)) {
     return value.filter(Boolean).map(String);
   }
 
   if (typeof value === 'string') {
-    return value.split(/[,|]/).map((item) => item.trim()).filter(Boolean);
+    return value
+      .split(/[,|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
 
   return [];
@@ -71,12 +81,19 @@ function getDifficulty(project) {
 }
 
 function getProjectDate(project) {
-  const date = new Date(project?.createdAt || project?.publishedAt || 0);
+  const date = new Date(
+    project?.createdAt || project?.publishedAt || 0
+  );
+
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
 function getDuration(project) {
-  const value = project?.duration || project?.estimatedTime || project?.timeRequired;
+  const value =
+    project?.duration ||
+    project?.estimatedTime ||
+    project?.timeRequired ||
+    project?.estimatedHours;
 
   if (typeof value === 'number' && value > 0) {
     return `${value} ${value === 1 ? 'hour' : 'hours'}`;
@@ -87,16 +104,10 @@ function getDuration(project) {
 
 function getProjectHref(project) {
   const slug = project?.slug || project?._id || project?.id;
-  return slug ? `/projects/${encodeURIComponent(String(slug))}` : '/projects';
-}
 
-function getInitials(value) {
-  return String(value || 'TJ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
+  return slug
+    ? `/projects/${encodeURIComponent(String(slug))}`
+    : '/projects';
 }
 
 function ProjectIcon({ project, className = '' }) {
@@ -105,11 +116,21 @@ function ProjectIcon({ project, className = '' }) {
 
   let Icon = Code2;
 
-  if (first.includes('react') || first.includes('vue') || first.includes('angular')) {
+  if (
+    first.includes('react') ||
+    first.includes('vue') ||
+    first.includes('angular')
+  ) {
     Icon = Layers3;
-  } else if (first.includes('node') || first.includes('express')) {
+  } else if (
+    first.includes('node') ||
+    first.includes('express')
+  ) {
     Icon = Command;
-  } else if (first.includes('mongo') || first.includes('sql')) {
+  } else if (
+    first.includes('mongo') ||
+    first.includes('sql')
+  ) {
     Icon = FolderGit2;
   }
 
@@ -128,11 +149,13 @@ function ProjectSkeleton() {
       <div className="tj-skeleton-line tj-skeleton-title" />
       <div className="tj-skeleton-line" />
       <div className="tj-skeleton-line tj-skeleton-medium" />
+
       <div className="tj-skeleton-tags">
         <span />
         <span />
         <span />
       </div>
+
       <div className="tj-skeleton-footer" />
     </div>
   );
@@ -142,12 +165,20 @@ function ProjectCard({ project, index }) {
   const technologies = getTechnologies(project);
   const difficulty = getDifficulty(project);
   const duration = getDuration(project);
+
   const description = text(
-    project?.shortDescription || project?.description,
+    project?.shortDescription ||
+      project?.tagline ||
+      project?.description,
     'Explore this practical build and strengthen your development skills.'
   );
 
-  const isFeatured = Boolean(project?.featured || project?.isFeatured);
+  const isFeatured = Boolean(
+    project?.featured ||
+    project?.isFeatured ||
+    project?.featuredAt
+  );
+
   const requirements = asArray(project?.requirements);
   const steps = asArray(project?.steps);
   const href = getProjectHref(project);
@@ -158,7 +189,9 @@ function ProjectCard({ project, index }) {
       style={{ '--card-index': index }}
     >
       <div className="tj-project-card-top">
-        <span className={`tj-difficulty tj-difficulty-${difficulty.toLowerCase()}`}>
+        <span
+          className={`tj-difficulty tj-difficulty-${difficulty.toLowerCase()}`}
+        >
           <CircleDot size={12} />
           {difficulty}
         </span>
@@ -173,10 +206,13 @@ function ProjectCard({ project, index }) {
 
       <div className="tj-project-card-visual">
         <div className="tj-project-visual-grid" />
+
         <ProjectIcon project={project} />
+
         <span className="tj-project-visual-index">
           {String(index + 1).padStart(2, '0')}
         </span>
+
         <span className="tj-project-visual-orbit tj-orbit-one" />
         <span className="tj-project-visual-orbit tj-orbit-two" />
       </div>
@@ -184,12 +220,15 @@ function ProjectCard({ project, index }) {
       <div className="tj-project-card-content">
         <div className="tj-project-card-heading">
           <h3>{text(project?.title, 'Untitled project')}</h3>
+
           <span className="tj-project-card-arrow" aria-hidden="true">
             <ArrowUpRight size={17} />
           </span>
         </div>
 
-        <p className="tj-project-description">{description}</p>
+        <p className="tj-project-description">
+          {description}
+        </p>
 
         <div className="tj-project-meta">
           {duration && (
@@ -198,12 +237,14 @@ function ProjectCard({ project, index }) {
               {duration}
             </span>
           )}
+
           {requirements.length > 0 && (
             <span>
               <CheckCircle2 size={14} />
               {requirements.length} requirements
             </span>
           )}
+
           {steps.length > 0 && (
             <span>
               <Layers3 size={14} />
@@ -217,8 +258,11 @@ function ProjectCard({ project, index }) {
             {technologies.slice(0, 4).map((technology) => (
               <span key={technology}>{technology}</span>
             ))}
+
             {technologies.length > 4 && (
-              <span className="tj-tech-more">+{technologies.length - 4}</span>
+              <span className="tj-tech-more">
+                +{technologies.length - 4}
+              </span>
             )}
           </div>
         )}
@@ -249,15 +293,27 @@ function EmptyProjects({ onReset, hasFilters }) {
       <div className="tj-empty-icon">
         <FolderGit2 size={30} />
       </div>
+
       <span className="tj-eyebrow">NOTHING MATCHED</span>
-      <h3>{hasFilters ? 'No projects found' : 'Your project studio is getting ready'}</h3>
+
+      <h3>
+        {hasFilters
+          ? 'No projects found'
+          : 'Your project studio is getting ready'}
+      </h3>
+
       <p>
         {hasFilters
           ? 'Try a different search term or remove some filters to discover more projects.'
           : 'Published projects will appear here when they are available.'}
       </p>
+
       {hasFilters && (
-        <button className="tj-button tj-button-secondary" onClick={onReset}>
+        <button
+          className="tj-button tj-button-secondary"
+          type="button"
+          onClick={onReset}
+        >
           <X size={16} />
           Clear filters
         </button>
@@ -270,10 +326,12 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('All levels');
   const [technology, setTechnology] = useState('All technologies');
   const [sort, setSort] = useState('featured');
+
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -283,6 +341,7 @@ export default function ProjectsPage() {
 
     try {
       const response = await api('/projects', { signal });
+
       const records = Array.isArray(response?.projects)
         ? response.projects
         : Array.isArray(response?.data?.projects)
@@ -294,26 +353,42 @@ export default function ProjectsPage() {
       setProjects(records);
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        setError(err?.message || 'Unable to load projects right now.');
+        setError(
+          err?.message || 'Unable to load projects right now.'
+        );
       }
     } finally {
-      if (!signal?.aborted) setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
+
     loadProjects(controller.signal);
+
     return () => controller.abort();
   }, [loadProjects]);
 
   const technologies = useMemo(() => {
     const all = projects.flatMap(getTechnologies);
-    return [...new Set(all)].sort((a, b) => a.localeCompare(b));
+
+    return [...new Set(all)].sort((a, b) =>
+      a.localeCompare(b)
+    );
   }, [projects]);
 
   const featuredProject = useMemo(() => {
-    return projects.find((project) => project?.featured || project?.isFeatured) || projects[0] || null;
+    return (
+      projects.find(
+        (project) =>
+          project?.featured ||
+          project?.isFeatured ||
+          project?.featuredAt
+      ) || null
+    );
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
@@ -321,9 +396,18 @@ export default function ProjectsPage() {
 
     const result = projects.filter((project) => {
       const title = text(project?.title).toLowerCase();
+
       const description = text(
-        project?.shortDescription || project?.description
+        project?.shortDescription ||
+          project?.tagline ||
+          project?.description
       ).toLowerCase();
+
+      const learningText = [
+        ...asArray(project?.learningObjectives),
+        ...asArray(project?.requirements),
+      ].join(' ').toLowerCase();
+
       const tech = getTechnologies(project);
       const level = getDifficulty(project);
 
@@ -331,28 +415,46 @@ export default function ProjectsPage() {
         !query ||
         title.includes(query) ||
         description.includes(query) ||
-        tech.some((item) => item.toLowerCase().includes(query));
+        learningText.includes(query) ||
+        tech.some((item) =>
+          item.toLowerCase().includes(query)
+        );
 
       const matchesDifficulty =
-        difficulty === 'All levels' || level === difficulty;
+        difficulty === 'All levels' ||
+        level === difficulty;
 
       const matchesTechnology =
-        technology === 'All technologies' || tech.includes(technology);
+        technology === 'All technologies' ||
+        tech.includes(technology);
 
-      return matchesSearch && matchesDifficulty && matchesTechnology;
+      return (
+        matchesSearch &&
+        matchesDifficulty &&
+        matchesTechnology
+      );
     });
 
     switch (sort) {
       case 'newest':
-        result.sort((a, b) => getProjectDate(b) - getProjectDate(a));
+        result.sort(
+          (a, b) => getProjectDate(b) - getProjectDate(a)
+        );
         break;
+
       case 'title':
         result.sort((a, b) =>
           text(a?.title).localeCompare(text(b?.title))
         );
         break;
+
       case 'difficulty': {
-        const rank = { Beginner: 1, Intermediate: 2, Advanced: 3 };
+        const rank = {
+          Beginner: 1,
+          Intermediate: 2,
+          Advanced: 3,
+        };
+
         result.sort(
           (a, b) =>
             (rank[getDifficulty(a)] || 4) -
@@ -360,6 +462,7 @@ export default function ProjectsPage() {
         );
         break;
       }
+
       default:
         result.sort(
           (a, b) =>
@@ -371,7 +474,11 @@ export default function ProjectsPage() {
     return result;
   }, [projects, search, difficulty, technology, sort]);
 
-  const visibleProjects = filteredProjects.slice(0, visibleCount);
+  const visibleProjects = filteredProjects.slice(
+    0,
+    visibleCount
+  );
+
   const hasFilters =
     Boolean(search.trim()) ||
     difficulty !== 'All levels' ||
@@ -391,6 +498,7 @@ export default function ProjectsPage() {
   };
 
   const totalTechnologies = technologies.length;
+
   const beginnerProjects = projects.filter(
     (project) => getDifficulty(project) === 'Beginner'
   ).length;
@@ -399,6 +507,7 @@ export default function ProjectsPage() {
     <main className="tj-projects-page">
       <section className="tj-project-hero">
         <div className="tj-project-hero-noise" />
+
         <div className="tj-project-hero-inner">
           <div className="tj-project-hero-copy">
             <div className="tj-project-kicker">
@@ -413,20 +522,25 @@ export default function ProjectsPage() {
             </h1>
 
             <p>
-              Move beyond tutorials. Build practical applications, solve
-              real-world problems, and create a portfolio that shows what
-              you can do.
+              Move beyond tutorials. Build practical applications,
+              solve real-world problems, and create a portfolio
+              that shows what you can do.
             </p>
 
             <div className="tj-project-hero-actions">
-              <a href="#project-catalogue" className="tj-button tj-button-primary">
+              <a
+                href="#project-catalogue"
+                className="tj-button tj-button-primary"
+              >
                 Explore projects
                 <ArrowRight size={17} />
               </a>
+
               <div className="tj-project-proof">
                 <span className="tj-proof-icon">
                   <Target size={16} />
                 </span>
+
                 <span>
                   <strong>Learn by building</strong>
                   <small>Practice with purpose</small>
@@ -439,10 +553,12 @@ export default function ProjectsPage() {
                 <strong>{loading ? '—' : projects.length}</strong>
                 <span>Published projects</span>
               </div>
+
               <div>
                 <strong>{loading ? '—' : totalTechnologies}</strong>
                 <span>Technologies</span>
               </div>
+
               <div>
                 <strong>{loading ? '—' : beginnerProjects}</strong>
                 <span>Beginner friendly</span>
@@ -459,11 +575,15 @@ export default function ProjectsPage() {
             <div className="tj-art-window">
               <div className="tj-art-window-top">
                 <div className="tj-window-dots">
-                  <i /><i /><i />
+                  <i />
+                  <i />
+                  <i />
                 </div>
+
                 <span>project.config</span>
                 <span className="tj-window-live">● LIVE</span>
               </div>
+
               <div className="tj-art-code">
                 <div><span>01</span><b>const</b> idea = <em>'your idea'</em>;</div>
                 <div><span>02</span><b>const</b> plan = build(idea);</div>
@@ -473,60 +593,101 @@ export default function ProjectsPage() {
                 <div><span>06</span>{'}'}</div>
                 <div><span>07</span><i>// progress starts here</i></div>
               </div>
+
               <div className="tj-art-window-bottom">
-                <span><CheckCircle2 size={13} /> Build ready</span>
+                <span>
+                  <CheckCircle2 size={13} />
+                  Build ready
+                </span>
                 <span>main · 0 errors</span>
               </div>
             </div>
 
             <div className="tj-art-float tj-art-float-top">
-              <span className="tj-float-icon"><Rocket size={17} /></span>
-              <span><strong>Build something</strong><small>Worth showing</small></span>
+              <span className="tj-float-icon">
+                <Rocket size={17} />
+              </span>
+              <span>
+                <strong>Build something</strong>
+                <small>Worth showing</small>
+              </span>
             </div>
+
             <div className="tj-art-float tj-art-float-bottom">
-              <span className="tj-float-check"><CheckCircle2 size={18} /></span>
-              <span><strong>Skills in action</strong><small>Learn · Build · Improve</small></span>
+              <span className="tj-float-check">
+                <CheckCircle2 size={18} />
+              </span>
+              <span>
+                <strong>Skills in action</strong>
+                <small>Learn · Build · Improve</small>
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="tj-project-content" id="project-catalogue">
+      <section
+        className="tj-project-content"
+        id="project-catalogue"
+      >
         <div className="tj-project-section-heading">
           <div>
             <span className="tj-eyebrow">THE PROJECT LIBRARY</span>
-            <h2>Find your next <span>build.</span></h2>
-            <p>Choose a challenge, explore the brief, and turn your learning into something tangible.</p>
+            <h2>
+              Find your next <span>build.</span>
+            </h2>
+            <p>
+              Choose a challenge, explore the brief, and turn your
+              learning into something tangible.
+            </p>
           </div>
+
           <div className="tj-library-count">
             <FolderGit2 size={17} />
-            <span>{loading ? 'Loading library' : `${filteredProjects.length} projects found`}</span>
+            <span>
+              {loading
+                ? 'Loading library'
+                : `${filteredProjects.length} projects found`}
+            </span>
           </div>
         </div>
 
         <div className="tj-project-toolbar">
           <label className="tj-project-search">
             <Search size={18} />
+
             <input
               type="search"
               value={search}
-              onChange={(event) => handleSearch(event.target.value)}
+              onChange={(event) =>
+                handleSearch(event.target.value)
+              }
               placeholder="Search projects, skills, technologies..."
               aria-label="Search projects"
             />
+
             {search && (
-              <button type="button" onClick={() => handleSearch('')} aria-label="Clear search">
+              <button
+                type="button"
+                onClick={() => handleSearch('')}
+                aria-label="Clear search"
+              >
                 <X size={16} />
               </button>
             )}
+
             <kbd>/</kbd>
           </label>
 
           <div className="tj-toolbar-actions">
             <button
-              className={`tj-filter-toggle ${filtersOpen ? 'is-active' : ''}`}
+              className={`tj-filter-toggle ${
+                filtersOpen ? 'is-active' : ''
+              }`}
               type="button"
-              onClick={() => setFiltersOpen((value) => !value)}
+              onClick={() =>
+                setFiltersOpen((value) => !value)
+              }
               aria-expanded={filtersOpen}
             >
               <SlidersHorizontal size={16} />
@@ -536,13 +697,19 @@ export default function ProjectsPage() {
 
             <label className="tj-sort-control">
               <span>Sort by</span>
+
               <select
                 value={sort}
-                onChange={(event) => setSort(event.target.value)}
+                onChange={(event) =>
+                  setSort(event.target.value)
+                }
                 aria-label="Sort projects"
               >
                 {SORT_OPTIONS.map((option) => (
-                  <option value={option.value} key={option.value}>
+                  <option
+                    value={option.value}
+                    key={option.value}
+                  >
                     {option.label}
                   </option>
                 ))}
@@ -555,6 +722,7 @@ export default function ProjectsPage() {
           <div className="tj-filter-panel">
             <label>
               <span>Difficulty</span>
+
               <select
                 value={difficulty}
                 onChange={(event) => {
@@ -563,13 +731,16 @@ export default function ProjectsPage() {
                 }}
               >
                 {DIFFICULTIES.map((item) => (
-                  <option key={item} value={item}>{item}</option>
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
               </select>
             </label>
 
             <label>
               <span>Technology</span>
+
               <select
                 value={technology}
                 onChange={(event) => {
@@ -578,13 +749,20 @@ export default function ProjectsPage() {
                 }}
               >
                 <option>All technologies</option>
+
                 {technologies.map((item) => (
-                  <option key={item} value={item}>{item}</option>
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
               </select>
             </label>
 
-            <button className="tj-clear-filter" type="button" onClick={clearFilters}>
+            <button
+              className="tj-clear-filter"
+              type="button"
+              onClick={clearFilters}
+            >
               <RefreshCw size={14} />
               Reset all
             </button>
@@ -593,11 +771,14 @@ export default function ProjectsPage() {
 
         <div className="tj-project-quick-filters">
           <span>QUICK FILTER</span>
+
           {DIFFICULTIES.map((item) => (
             <button
               key={item}
               type="button"
-              className={difficulty === item ? 'is-selected' : ''}
+              className={
+                difficulty === item ? 'is-selected' : ''
+              }
               onClick={() => {
                 setDifficulty(item);
                 setVisibleCount(PAGE_SIZE);
@@ -606,8 +787,13 @@ export default function ProjectsPage() {
               {item}
             </button>
           ))}
+
           {hasFilters && (
-            <button className="tj-reset-inline" type="button" onClick={clearFilters}>
+            <button
+              className="tj-reset-inline"
+              type="button"
+              onClick={clearFilters}
+            >
               Clear filters <X size={13} />
             </button>
           )}
@@ -616,9 +802,12 @@ export default function ProjectsPage() {
         {error && (
           <div className="tj-project-error" role="alert">
             <div>
-              <strong>We couldn't load the project library.</strong>
+              <strong>
+                We couldn't load the project library.
+              </strong>
               <p>{error}</p>
             </div>
+
             <button
               type="button"
               className="tj-button tj-button-secondary"
@@ -640,38 +829,72 @@ export default function ProjectsPage() {
                 <Sparkles size={14} />
                 EDITOR'S PICK
               </span>
+
               <h3>{text(featuredProject.title, 'Featured project')}</h3>
+
               <p>
                 {text(
-                  featuredProject.shortDescription || featuredProject.description,
+                  featuredProject.shortDescription ||
+                    featuredProject.description,
                   'A practical project selected from the project library.'
                 )}
               </p>
+
               <div className="tj-featured-tags">
                 <span>{getDifficulty(featuredProject)}</span>
-                {getDuration(featuredProject) && <span>{getDuration(featuredProject)}</span>}
-                {getTechnologies(featuredProject).slice(0, 3).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
+
+                {getDuration(featuredProject) && (
+                  <span>{getDuration(featuredProject)}</span>
+                )}
+
+                {getTechnologies(featuredProject)
+                  .slice(0, 3)
+                  .map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
               </div>
-              <Link className="tj-featured-link" to={getProjectHref(featuredProject)}>
+
+              <Link
+                className="tj-featured-link"
+                to={getProjectHref(featuredProject)}
+              >
                 Explore featured project
                 <ArrowUpRight size={17} />
               </Link>
             </div>
+
             <div className="tj-featured-art" aria-hidden="true">
               <div className="tj-featured-backdrop" />
+
               <div className="tj-featured-code-card">
-                <div className="tj-featured-code-head"><i /><i /><i /><span>build-your-next-idea</span></div>
+                <div className="tj-featured-code-head">
+                  <i />
+                  <i />
+                  <i />
+                  <span>build-your-next-idea</span>
+                </div>
+
                 <div className="tj-featured-code-body">
-                  <span>01</span> <b>import</b> {'{'} creativity {'}'}<br />
-                  <span>02</span> <b>from</b> <em>'practice'</em><br />
-                  <span>03</span><br />
-                  <span>04</span> <b>export default</b> success;<br />
+                  <span>01</span> <b>import</b> {'{'} creativity {'}'}
+                  <br />
+                  <span>02</span> <b>from</b> <em>'practice'</em>
+                  <br />
+                  <span>03</span>
+                  <br />
+                  <span>04</span> <b>export default</b> success;
+                  <br />
                   <span>05</span> <i>// keep building</i>
                 </div>
               </div>
-              <div className="tj-featured-stamp"><Rocket size={24} /><span>MAKE IT<br />REAL</span></div>
+
+              <div className="tj-featured-stamp">
+                <Rocket size={24} />
+                <span>
+                  MAKE IT
+                  <br />
+                  REAL
+                </span>
+              </div>
             </div>
           </section>
         )}
@@ -679,8 +902,11 @@ export default function ProjectsPage() {
         <div className="tj-project-results-heading">
           <div>
             <span className="tj-eyebrow">EXPLORE & BUILD</span>
-            <h3>{hasFilters ? 'Matching projects' : 'All projects'}</h3>
+            <h3>
+              {hasFilters ? 'Matching projects' : 'All projects'}
+            </h3>
           </div>
+
           {!loading && (
             <span className="tj-results-number">
               Showing {visibleProjects.length} of {filteredProjects.length}
@@ -699,7 +925,12 @@ export default function ProjectsPage() {
             <div className="tj-project-grid">
               {visibleProjects.map((project, index) => (
                 <ProjectCard
-                  key={project?._id || project?.id || project?.slug || index}
+                  key={
+                    project?._id ||
+                    project?.id ||
+                    project?.slug ||
+                    index
+                  }
                   project={project}
                   index={index}
                 />
@@ -711,7 +942,9 @@ export default function ProjectsPage() {
                 <button
                   className="tj-button tj-button-secondary tj-load-more"
                   type="button"
-                  onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                  onClick={() =>
+                    setVisibleCount((count) => count + PAGE_SIZE)
+                  }
                 >
                   Load more projects
                   <ArrowDownIcon />
@@ -720,19 +953,38 @@ export default function ProjectsPage() {
             )}
           </>
         ) : (
-          <EmptyProjects onReset={clearFilters} hasFilters={hasFilters} />
+          <EmptyProjects
+            onReset={clearFilters}
+            hasFilters={hasFilters}
+          />
         )}
       </section>
 
       <section className="tj-project-bottom-cta">
         <div className="tj-cta-orb" />
-        <div className="tj-cta-icon"><Rocket size={23} /></div>
-        <div className="tj-cta-copy">
-          <span className="tj-eyebrow">YOUR NEXT STEP STARTS HERE</span>
-          <h2>Learn a concept. <span>Build a solution.</span></h2>
-          <p>Pair your project work with structured courses and keep growing your developer skill set.</p>
+        <div className="tj-cta-icon">
+          <Rocket size={23} />
         </div>
-        <Link to="/courses" className="tj-button tj-button-primary">
+
+        <div className="tj-cta-copy">
+          <span className="tj-eyebrow">
+            YOUR NEXT STEP STARTS HERE
+          </span>
+
+          <h2>
+            Learn a concept. <span>Build a solution.</span>
+          </h2>
+
+          <p>
+            Pair your project work with structured courses and
+            keep growing your developer skill set.
+          </p>
+        </div>
+
+        <Link
+          to="/courses"
+          className="tj-button tj-button-primary"
+        >
           Explore courses
           <ArrowRight size={17} />
         </Link>
@@ -742,5 +994,10 @@ export default function ProjectsPage() {
 }
 
 function ArrowDownIcon() {
-  return <ArrowRight size={16} className="tj-arrow-down" />;
+  return (
+    <ArrowRight
+      size={16}
+      className="tj-arrow-down"
+    />
+  );
 }

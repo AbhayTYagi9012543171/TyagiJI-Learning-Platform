@@ -1,42 +1,17 @@
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Link,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
-
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Bookmark,
-  BriefcaseBusiness,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Clock3,
-  Code2,
-  ExternalLink,
-  FileCode2,
-  Github,
-  GraduationCap,
-  Layers3,
-  LoaderCircle,
-  Play,
-  Rocket,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Terminal,
-  Users,
-  X,
-  Zap,
+  ArrowLeft, ArrowRight, BookOpen, Bookmark, BriefcaseBusiness,
+  Check, CheckCircle2, ChevronRight, Clock3, Code2, ExternalLink,
+  FileCode2, Github, GraduationCap, Layers3, LoaderCircle, Play,
+  Rocket, ShieldCheck, Sparkles, Target, Terminal, Users, Zap,
 } from 'lucide-react';
 
 import { api } from '../../services/api.js';
-
-// import '../../styles/pages/project-details-premium.css';
+import ProjectChecklist from '../../components/projects/ProjectChecklist.jsx';
+import ProjectSubmissionPanel from '../../components/projects/ProjectSubmissionPanel.jsx';
+import '../../styles/pages/projects-premium.css';
+import '../../styles/pages/project-details-premium.css';
 
 const FALLBACK_PROJECT = {
   title: 'Project details',
@@ -84,7 +59,13 @@ function getList(value) {
       if (typeof item === 'string') return item;
 
       if (item && typeof item === 'object') {
-        return item.title || item.name || item.text || item.description || '';
+        return (
+          item.title ||
+          item.name ||
+          item.text ||
+          item.description ||
+          ''
+        );
       }
 
       return '';
@@ -104,15 +85,30 @@ function getDifficultyClass(difficulty = '') {
 function ProjectDetailsPage() {
   const { slug, id } = useParams();
   const navigate = useNavigate();
-
   const projectIdentifier = slug || id;
 
   const [project, setProject] = useState(null);
   const [relatedProjects, setRelatedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
+
+  const [saved, setSaved] = useState(() => {
+    try {
+      const savedIds = JSON.parse(
+        localStorage.getItem('tyagiji-saved-projects') || '[]'
+      );
+
+      return (
+        Array.isArray(savedIds) &&
+        savedIds.includes(String(projectIdentifier))
+      );
+    } catch {
+      return false;
+    }
+  });
+
   const [activeSection, setActiveSection] = useState('overview');
+  const [completedSteps, setCompletedSteps] = useState([]);
 
   const loadProject = useCallback(async (signal) => {
     if (!projectIdentifier) {
@@ -168,27 +164,85 @@ function ProjectDetailsPage() {
     return () => controller.abort();
   }, [loadProject]);
 
+  useEffect(() => {
+    try {
+      const savedIds = JSON.parse(
+        localStorage.getItem('tyagiji-saved-projects') || '[]'
+      );
+
+      setSaved(
+        Array.isArray(savedIds) &&
+        savedIds.includes(String(projectIdentifier))
+      );
+    } catch {
+      setSaved(false);
+    }
+
+    setCompletedSteps([]);
+  }, [projectIdentifier]);
+
   const details = useMemo(() => {
     const item = project || FALLBACK_PROJECT;
+    const technologyValue = item.technology || item.technologies;
 
     return {
       title: getText(item.title || item.name, 'Untitled project'),
-      description: getText(item.shortDescription || item.description),
-      overview: getText(item.overview || item.longDescription || item.description),
-      technology: getText(item.technology || item.category, 'Web Development'),
+      description: getText(
+        item.shortDescription || item.description
+      ),
+      overview: getText(
+        item.overview ||
+        item.longDescription ||
+        item.description
+      ),
+      technology: Array.isArray(technologyValue)
+        ? technologyValue.filter(Boolean).join(' · ')
+        : getText(
+            technologyValue || item.category,
+            'Web Development'
+          ),
       difficulty: getText(item.difficulty, 'Beginner'),
-      duration: getText(item.duration || item.estimatedDuration, 'Self paced'),
-      objectives: getList(item.objectives || item.learningObjectives),
+      duration: getText(
+        item.duration ||
+        item.estimatedDuration ||
+        (
+          item.estimatedHours
+            ? `${item.estimatedHours} hours`
+            : ''
+        ),
+        'Self paced'
+      ),
+      objectives: getList(
+        item.objectives || item.learningObjectives
+      ),
       features: getList(item.features),
-      requirements: getList(item.requirements || item.prerequisites),
-      tags: getList(item.tags || item.technologies),
-      image: item.thumbnail || item.image || item.coverImage || '',
+      steps: getList(item.steps),
+      acceptanceCriteria: getList(item.acceptanceCriteria),
+      starterFiles: Array.isArray(item.starterFiles)
+        ? item.starterFiles
+        : [],
+      extensions: getList(item.extensionTasks),
+      requirements: getList(
+        item.requirements || item.prerequisites
+      ),
+      tags: getList(
+        item.tags || item.technologies || item.technology
+      ),
+      image:
+        item.thumbnail ||
+        item.thumbnailUrl ||
+        item.image ||
+        item.coverImage ||
+        '',
       githubUrl: item.githubUrl || item.repositoryUrl || '',
       liveUrl: item.liveUrl || item.demoUrl || '',
       courseUrl: item.courseUrl || '',
       status: item.status || 'Available',
-      author: item.author?.name || item.createdBy?.name || item.instructor?.name || '',
-      createdAt: item.createdAt || '',
+      author:
+        item.author?.name ||
+        item.createdBy?.name ||
+        item.instructor?.name ||
+        '',
     };
   }, [project]);
 
@@ -197,19 +251,66 @@ function ProjectDetailsPage() {
     { id: 'features', label: 'Features' },
     { id: 'objectives', label: 'Learning outcomes' },
     { id: 'requirements', label: 'Requirements' },
+    ...(details.steps.length
+      ? [{ id: 'steps', label: 'Build steps' }]
+      : []),
+    ...(details.acceptanceCriteria.length
+      ? [{ id: 'acceptance', label: 'Acceptance criteria' }]
+      : []),
+    ...(details.extensions.length
+      ? [{ id: 'extensions', label: 'Next challenges' }]
+      : []),
+    { id: 'submit', label: 'Submit project' },
   ];
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
 
-    document.getElementById(`project-${sectionId}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    document
+      .getElementById(`project-${sectionId}`)
+      ?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
   };
 
   const handleBookmark = () => {
-    setSaved((current) => !current);
+    setSaved((current) => {
+      const next = !current;
+
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem('tyagiji-saved-projects') || '[]'
+        );
+
+        const ids = Array.isArray(stored)
+          ? stored.map(String)
+          : [];
+
+        const updated = next
+          ? [...new Set([...ids, String(projectIdentifier)])]
+          : ids.filter(
+              (item) => item !== String(projectIdentifier)
+            );
+
+        localStorage.setItem(
+          'tyagiji-saved-projects',
+          JSON.stringify(updated)
+        );
+      } catch {
+        // Storage may be unavailable in private browsing.
+      }
+
+      return next;
+    });
+  };
+
+  const toggleBuildStep = (index) => {
+    setCompletedSteps((current) =>
+      current.includes(index)
+        ? current.filter((item) => item !== index)
+        : [...current, index]
+    );
   };
 
   if (loading) {
@@ -219,9 +320,7 @@ function ProjectDetailsPage() {
           <div className="tj-project-skeleton tj-project-skeleton-back" />
           <div className="tj-project-skeleton tj-project-skeleton-title" />
           <div className="tj-project-skeleton tj-project-skeleton-description" />
-
           <div className="tj-project-skeleton tj-project-skeleton-hero" />
-
           <div className="tj-project-skeleton tj-project-skeleton-content" />
         </div>
       </main>
@@ -238,11 +337,11 @@ function ProjectDetailsPage() {
             </div>
 
             <h1>Project unavailable</h1>
-
             <p>{error || 'This project could not be found.'}</p>
 
             <div className="tj-project-error-actions">
               <button
+                type="button"
                 className="tj-project-button tj-project-button-primary"
                 onClick={() => {
                   const controller = new AbortController();
@@ -254,6 +353,7 @@ function ProjectDetailsPage() {
               </button>
 
               <button
+                type="button"
                 className="tj-project-button tj-project-button-secondary"
                 onClick={() => navigate('/projects')}
               >
@@ -270,8 +370,10 @@ function ProjectDetailsPage() {
   return (
     <main className="tj-project-details">
       <div className="tj-project-container">
-
-        <nav className="tj-project-breadcrumb" aria-label="Breadcrumb">
+        <nav
+          className="tj-project-breadcrumb"
+          aria-label="Breadcrumb"
+        >
           <Link to="/">Home</Link>
           <ChevronRight size={15} />
           <Link to="/projects">Projects</Link>
@@ -291,11 +393,16 @@ function ProjectDetailsPage() {
             <h1>{details.title}</h1>
 
             <p className="tj-project-subtitle">
-              {details.description || 'Explore this hands-on project and build practical development skills.'}
+              {details.description ||
+                'Explore this hands-on project and build practical development skills.'}
             </p>
 
             <div className="tj-project-meta">
-              <span className={`tj-project-difficulty ${getDifficultyClass(details.difficulty)}`}>
+              <span
+                className={`tj-project-difficulty ${getDifficultyClass(
+                  details.difficulty
+                )}`}
+              >
                 <Zap size={14} />
                 {details.difficulty}
               </span>
@@ -329,12 +436,14 @@ function ProjectDetailsPage() {
 
               <button
                 type="button"
-                className={`tj-project-button tj-project-button-secondary ${saved ? 'is-saved' : ''}`}
+                className={`tj-project-button tj-project-button-secondary ${
+                  saved ? 'is-saved' : ''
+                }`}
                 onClick={handleBookmark}
                 aria-pressed={saved}
               >
                 {saved ? <Check size={17} /> : <Bookmark size={17} />}
-                {saved ? 'Saved locally' : 'Save project'}
+                {saved ? 'Saved' : 'Save project'}
               </button>
             </div>
           </div>
@@ -354,6 +463,7 @@ function ProjectDetailsPage() {
                     <span />
                     <span />
                   </div>
+
                   <span>project.js</span>
                   <Code2 size={15} />
                 </div>
@@ -363,22 +473,33 @@ function ProjectDetailsPage() {
                     <span>01</span>
                     <code><i>const</i> project = {'{'}</code>
                   </div>
+
                   <div className="tj-project-code-line indent">
                     <span>02</span>
-                    <code>name: <b>'{details.title.slice(0, 23)}'</b>,</code>
+                    <code>
+                      name: <b>'{details.title.slice(0, 23)}'</b>,
+                    </code>
                   </div>
+
                   <div className="tj-project-code-line indent">
                     <span>03</span>
-                    <code>technology: <b>'{details.technology}'</b>,</code>
+                    <code>
+                      technology: <b>'{details.technology}'</b>,
+                    </code>
                   </div>
+
                   <div className="tj-project-code-line indent">
                     <span>04</span>
-                    <code>level: <b>'{details.difficulty}'</b></code>
+                    <code>
+                      level: <b>'{details.difficulty}'</b>
+                    </code>
                   </div>
+
                   <div className="tj-project-code-line">
                     <span>05</span>
                     <code>{'}'};</code>
                   </div>
+
                   <div className="tj-project-code-line code-highlight">
                     <span>06</span>
                     <code><i>await</i> build(project);</code>
@@ -386,7 +507,10 @@ function ProjectDetailsPage() {
                 </div>
 
                 <div className="tj-project-code-footer">
-                  <span><span className="tj-project-status-dot" /> Ready to build</span>
+                  <span>
+                    <span className="tj-project-status-dot" />
+                    Ready to build
+                  </span>
                   <span>TyagiJI Lab</span>
                 </div>
               </div>
@@ -400,7 +524,6 @@ function ProjectDetailsPage() {
         </header>
 
         <div className="tj-project-layout">
-
           <aside className="tj-project-sidebar">
             <div className="tj-project-sidebar-card">
               <div className="tj-project-sidebar-title">
@@ -413,7 +536,9 @@ function ProjectDetailsPage() {
                   <button
                     type="button"
                     key={section.id}
-                    className={activeSection === section.id ? 'active' : ''}
+                    className={
+                      activeSection === section.id ? 'active' : ''
+                    }
                     onClick={() => scrollToSection(section.id)}
                   >
                     <span />
@@ -454,32 +579,20 @@ function ProjectDetailsPage() {
                 </div>
               </div>
 
-              {details.courseUrl && (
-                <Link
-                  to={details.courseUrl}
-                  className="tj-project-sidebar-cta"
-                >
-                  <GraduationCap size={17} />
-                  Related course
-                  <ArrowRight size={15} />
-                </Link>
-              )}
-
-              {!details.courseUrl && (
-                <Link
-                  to="/courses"
-                  className="tj-project-sidebar-cta"
-                >
-                  <BookOpen size={17} />
-                  Explore courses
-                  <ArrowRight size={15} />
-                </Link>
-              )}
+              <Link
+                to={details.courseUrl || '/courses'}
+                className="tj-project-sidebar-cta"
+              >
+                <GraduationCap size={17} />
+                {details.courseUrl
+                  ? 'Related course'
+                  : 'Explore courses'}
+                <ArrowRight size={15} />
+              </Link>
             </div>
           </aside>
 
           <article className="tj-project-content">
-
             <section
               id="project-overview"
               className="tj-project-section"
@@ -490,22 +603,18 @@ function ProjectDetailsPage() {
                 </span>
 
                 <div>
-                  <span className="tj-project-section-kicker">01 / INTRODUCTION</span>
+                  <span className="tj-project-section-kicker">
+                    01 / INTRODUCTION
+                  </span>
                   <h2>Project overview</h2>
                 </div>
               </div>
 
               <div className="tj-project-prose">
-                {details.overview ? (
-                  <p>{details.overview}</p>
-                ) : (
-                  <p>
-                    This project is designed to help you apply development
-                    concepts through practical implementation. Explore the
-                    requirements, identify the core features, and build your
-                    solution step by step.
-                  </p>
-                )}
+                <p>
+                  {details.overview ||
+                    'This project is designed to help you apply development concepts through practical implementation. Explore the requirements, identify the core features, and build your solution step by step.'}
+                </p>
               </div>
 
               {details.tags.length > 0 && (
@@ -527,7 +636,9 @@ function ProjectDetailsPage() {
                 </span>
 
                 <div>
-                  <span className="tj-project-section-kicker">02 / WHAT YOU WILL BUILD</span>
+                  <span className="tj-project-section-kicker">
+                    02 / WHAT YOU WILL BUILD
+                  </span>
                   <h2>Core features</h2>
                 </div>
               </div>
@@ -535,7 +646,10 @@ function ProjectDetailsPage() {
               {details.features.length > 0 ? (
                 <div className="tj-project-feature-grid">
                   {details.features.map((feature, index) => (
-                    <div className="tj-project-feature" key={`${feature}-${index}`}>
+                    <div
+                      className="tj-project-feature"
+                      key={`${feature}-${index}`}
+                    >
                       <span className="tj-project-feature-check">
                         <CheckCircle2 size={17} />
                       </span>
@@ -546,7 +660,10 @@ function ProjectDetailsPage() {
               ) : (
                 <div className="tj-project-empty-note">
                   <Layers3 size={20} />
-                  <p>Feature information will be available when provided by the project.</p>
+                  <p>
+                    Feature information will be available when
+                    provided by the project.
+                  </p>
                 </div>
               )}
             </section>
@@ -561,7 +678,9 @@ function ProjectDetailsPage() {
                 </span>
 
                 <div>
-                  <span className="tj-project-section-kicker">03 / YOUR PROGRESS</span>
+                  <span className="tj-project-section-kicker">
+                    03 / YOUR PROGRESS
+                  </span>
                   <h2>What you will learn</h2>
                 </div>
               </div>
@@ -594,7 +713,9 @@ function ProjectDetailsPage() {
                 </span>
 
                 <div>
-                  <span className="tj-project-section-kicker">04 / BEFORE YOU START</span>
+                  <span className="tj-project-section-kicker">
+                    04 / BEFORE YOU START
+                  </span>
                   <h2>Requirements</h2>
                 </div>
               </div>
@@ -611,10 +732,170 @@ function ProjectDetailsPage() {
               ) : (
                 <div className="tj-project-empty-note">
                   <CheckCircle2 size={20} />
-                  <p>No specific prerequisites have been listed for this project.</p>
+                  <p>
+                    No specific prerequisites have been listed
+                    for this project.
+                  </p>
                 </div>
               )}
             </section>
+
+            {details.steps.length > 0 && (
+              <section
+                id="project-steps"
+                className="tj-project-section"
+              >
+                <div className="tj-project-section-heading">
+                  <span className="tj-project-section-icon">
+                    <Layers3 size={19} />
+                  </span>
+
+                  <div>
+                    <span className="tj-project-section-kicker">
+                      05 / BUILD PLAN
+                    </span>
+                    <h2>Build it step by step</h2>
+                    <p>
+                      Use this checklist to keep track of your
+                      implementation during this visit.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="tj-project-step-progress">
+                  <span>
+                    {completedSteps.length} of {details.steps.length} steps checked
+                  </span>
+
+                  <div>
+                    <i
+                      style={{
+                        width: `${
+                          details.steps.length
+                            ? (completedSteps.length /
+                                details.steps.length) *
+                              100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <ProjectChecklist
+                  items={details.steps}
+                  completed={completedSteps}
+                  onToggle={toggleBuildStep}
+                />
+              </section>
+            )}
+
+            {details.acceptanceCriteria.length > 0 && (
+              <section
+                id="project-acceptance"
+                className="tj-project-section"
+              >
+                <div className="tj-project-section-heading">
+                  <span className="tj-project-section-icon">
+                    <ShieldCheck size={19} />
+                  </span>
+
+                  <div>
+                    <span className="tj-project-section-kicker">
+                      06 / DEFINITION OF DONE
+                    </span>
+                    <h2>Acceptance criteria</h2>
+                  </div>
+                </div>
+
+                <div className="tj-project-requirement-list">
+                  {details.acceptanceCriteria.map(
+                    (criterion, index) => (
+                      <div key={`${criterion}-${index}`}>
+                        <CheckCircle2 size={17} />
+                        <p>{criterion}</p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+            )}
+
+            {details.starterFiles.length > 0 && (
+              <section className="tj-project-section tj-project-starter-files">
+                <div className="tj-project-section-heading">
+                  <span className="tj-project-section-icon">
+                    <FileCode2 size={19} />
+                  </span>
+
+                  <div>
+                    <span className="tj-project-section-kicker">
+                      STARTER MATERIAL
+                    </span>
+                    <h2>Starter files</h2>
+                    <p>
+                      Reference snippets supplied with this project.
+                    </p>
+                  </div>
+                </div>
+
+                {details.starterFiles.map((file, index) => (
+                  <details
+                    className="tj-project-starter-file"
+                    key={`${file.name || 'file'}-${index}`}
+                  >
+                    <summary>
+                      <FileCode2 size={16} />
+                      {file.name || `Starter file ${index + 1}`}
+                      <span>View code</span>
+                    </summary>
+
+                    <pre>
+                      <code>
+                        {file.content || 'No starter content supplied.'}
+                      </code>
+                    </pre>
+                  </details>
+                ))}
+              </section>
+            )}
+
+            {details.extensions.length > 0 && (
+              <section
+                id="project-extensions"
+                className="tj-project-section"
+              >
+                <div className="tj-project-section-heading">
+                  <span className="tj-project-section-icon">
+                    <Rocket size={19} />
+                  </span>
+
+                  <div>
+                    <span className="tj-project-section-kicker">
+                      LEVEL UP
+                    </span>
+                    <h2>Take it further</h2>
+                    <p>
+                      Optional extensions to stretch your
+                      implementation after the core build.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="tj-project-requirement-list">
+                  {details.extensions.map((task, index) => (
+                    <div key={`${task}-${index}`}>
+                      <Sparkles size={17} />
+                      <p>{task}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <div id="project-submit">
+              <ProjectSubmissionPanel project={project} />
+            </div>
 
             <section className="tj-project-build-cta">
               <div className="tj-project-build-icon">
@@ -623,20 +904,25 @@ function ProjectDetailsPage() {
 
               <div>
                 <span>YOUR NEXT STEP</span>
-                <h2>Ready to turn knowledge into experience?</h2>
+                <h2>
+                  Ready to turn knowledge into experience?
+                </h2>
                 <p>
-                  Start exploring the learning resources and build your
-                  development skills through practice.
+                  Start exploring the learning resources and build
+                  your development skills through practice.
                 </p>
               </div>
 
-              <Link to="/courses" className="tj-project-button tj-project-button-primary">
+              <Link
+                to="/courses"
+                className="tj-project-button tj-project-button-primary"
+              >
                 Start learning
                 <ArrowRight size={17} />
               </Link>
             </section>
 
-            {details.githubUrl || details.liveUrl ? (
+            {(details.githubUrl || details.liveUrl) && (
               <section className="tj-project-external-links">
                 <h3>Project links</h3>
 
@@ -666,8 +952,7 @@ function ProjectDetailsPage() {
                   )}
                 </div>
               </section>
-            ) : null}
-
+            )}
           </article>
         </div>
 
@@ -699,7 +984,9 @@ function ProjectDetailsPage() {
                   <h3>{item.title || item.name}</h3>
 
                   <p>
-                    {item.shortDescription || item.description || 'Explore this practical development project.'}
+                    {item.shortDescription ||
+                      item.description ||
+                      'Explore this practical development project.'}
                   </p>
 
                   <span>
@@ -723,7 +1010,6 @@ function ProjectDetailsPage() {
             <ArrowRight size={16} />
           </Link>
         </div>
-
       </div>
     </main>
   );
