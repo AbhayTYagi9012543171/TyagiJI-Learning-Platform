@@ -221,6 +221,9 @@ function createSession(user, res) {
     {
 
       sub: String(user._id),
+      // Match the token to the user's current authVersion. Logout and
+      // password-reset operations increment this value to revoke old tokens.
+      ver: Number(user.authVersion || 0),
 
       jti: crypto.randomUUID(),
 
